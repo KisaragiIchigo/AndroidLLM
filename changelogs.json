@@ -1,0 +1,352 @@
+[
+  {
+    "datetime": "2026-10-28T09:00:00+09:00",
+    "files": [
+      "project_style.json",
+      "changelogs.json"
+    ],
+    "summary": "オフラインチャットAI『Hisoka』のスタイルマニフェスト案と変更履歴を新規作成（実装前・ユーザー承認待ち）",
+    "purpose": "機密文書の添削と私的な雑談を端末内で完結させるアプリの雰囲気（夜の書斎・ランプのアンバー・緑青の思考ブロック）を一度だけ確定し、以後のUI判断の単一情報源にするため",
+    "impact": "UI 実装はすべてこのマニフェストに従う。コードはまだ存在しない",
+    "concerns": [
+      "ユーザー指定の『Gemma 4n E2B』は実在せず、実体は Gemma 4 E2B（2026-04 リリース、.litertlm 約2.58GB）と判断した",
+      "開発機に JDK・Android SDK が無く、シェルのネットワークはサンドボックスで遮断されている。ビルドにはツールチェーン導入とネットワーク許可が必要",
+      "LiteRT-LM の minSdk は公式ドキュメントに記載がなく、ビルド時に AAR のマニフェストで確認する必要がある",
+      "WebView 経由の入力では IME の学習（キーボードのクラウド同期）が情報流出経路になり得るため、IME_FLAG_NO_PERSONALIZED_LEARNING を付与するカスタム WebView が必要"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T09:40:00+09:00",
+    "files": [
+      "project_style.json"
+    ],
+    "summary": "ユーザーのフィードバックを反映し、ヘッダー・タイトル・添削／雑談モード切替を廃止してチャット専用レイアウトへ変更。画像・音声・動画・ファイル添付を要件に追加",
+    "purpose": "チャットへの集中を最優先にするため。添削は専用モードではなく、通常の会話の中で依頼すると回答内に差分カードが表示される形にする",
+    "impact": "meta.concept、density.layout、forbidden を更新。色・フォント・質感は変更なし",
+    "concerns": [
+      "Gemma 4 E2B の入力上限（公式モデルカード）: 音声は1回30秒まで、動画は1秒1コマで60秒（60コマ）まで。長い音声は30秒ごとに分割し、長い動画は60コマへ均等に間引く必要がある",
+      "LiteRT-LM の音声入力は WAV/PCM のみ受け付けるというコミュニティ報告あり。Kotlin 側で MediaExtractor/MediaCodec によるデコードと 16kHz モノラルへのリサンプルが必要（未検証）",
+      "Think と画像入力の併用で一部端末がクラッシュするというコミュニティ報告あり。実機検証で再現する場合は、マルチモーダルの送信時に Think を自動でオフにして通知する",
+      "PDF・Word はモデルが直接読めないため、端末内で本文を抽出してテキストとして渡す。長文はコンテキスト長の上限に注意"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T13:20:00+09:00",
+    "files": [
+      "package.json",
+      "index.html",
+      "vite.config.ts",
+      "tsconfig.json",
+      "tailwind.config.ts",
+      "postcss.config.js",
+      "capacitor.config.ts",
+      ".gitignore",
+      "README.md",
+      "src/**（main.tsx, App.tsx, styles/, components/ui/*, features/boot|setup|chat|history|settings, lib/native|chat|diff|proofread|settings|format|clipboard）",
+      "android/build.gradle",
+      "android/variables.gradle",
+      "android/gradle.properties",
+      "android/app/build.gradle",
+      "android/app/src/main/AndroidManifest.xml",
+      "android/app/src/main/res/（styles, colors_hisoka, data_extraction_rules, file_paths, capacitor_bridge_layout_main, ic_launcher_foreground_hisoka, mipmap-anydpi-v26）",
+      "android/app/src/main/java/app/hisoka/offline/**（MainActivity, SecureWebView, DevicePrefs, llm/*, media/*, vault/*）"
+    ],
+    "summary": "Hisoka v1.0.0 を新規実装し、署名済み APK（release/Hisoka-1.0.0.apk）を生成。Capacitor 8 + LiteRT-LM 0.18.1 で Gemma 4 E2B を端末内実行し、Think モード・画像/音声/動画/文書の添付・添削差分表示・暗号化履歴（検索/個別削除/全削除/揮発モード）を搭載",
+    "purpose": "機密文書の添削と私的な雑談を、通信手段を持たない端末内で完結させるため",
+    "impact": "新規プロジェクト。マージ後マニフェストの権限は RECORD_AUDIO と Android 自動付与の内部権限のみ（aapt2 で確認済み）。minSdk 28 / targetSdk 36 / arm64-v8a のみ",
+    "decisions": [
+      "UI スタックを守るため Capacitor で React UI を包み、推論・メディア・保存は Kotlin プラグイン3つ（HisokaLlm / HisokaMedia / HisokaVault）に分離",
+      "INTERNET / ACCESS_NETWORK_STATE / ACCESS_WIFI_STATE を tools:node=remove で除去。WebView の Safe Browsing と計測も無効化",
+      "IME_FLAG_NO_PERSONALIZED_LEARNING を付けるため capacitor_bridge_layout_main.xml をアプリ側で上書きし SecureWebView に差し替え",
+      "LiteRT-LM の呼び出しは単一スレッドに閉じ込め、cancelProcess だけをスレッド越しに呼ぶ。トークン数と tok/s は ExperimentalFlags.enableBenchmark の BenchmarkInfo から取得",
+      "音声は 16kHz モノラル PCM16 の WAV に正規化して 30 秒ごとに分割（最大 2 分）。動画は 8 コマ＋音声 60 秒まで。画像系は 1 送信 10 枚まで",
+      "添削はモードを作らず、システムプロンプトで ```revised ブロックを要求し、UI 側で検出して差分カードを表示。差分は字種単位の Myers 差分の後、置換部分だけ文字単位で再比較",
+      "履歴は会話ごとのファイルと要約インデックスの両方を Keystore 鍵の AES-256-GCM で暗号化。全削除時は鍵も破棄",
+      "ツールチェーンはシステムに入れず .toolchain/（JDK 21.0.12 / Android SDK）へ展開。署名鍵は .signing/ に生成し、どちらも .gitignore 済み"
+    ],
+    "verification": [
+      "tsc（TypeScript 7.0.2）通過。わざと型エラーを入れて検出されることも確認",
+      "vite build 通過。バンドル内の URL は XML 名前空間と React のエラー解説 URL のみ",
+      "gradlew assembleRelease 通過。apksigner verify 通過（v2 署名）。aapt2 で権限・uses-native-library・arm64-v8a を確認",
+      "ネイティブ部分をモックに差し替えた UI ハーネス（puppeteer）で、送信→Think ストリーミング→回答→添付→添削差分→メニュー→履歴→設定の操作を通し、スクリーンショットで目視確認",
+      "差分アルゴリズムを実文で検算（致します→いたします が「致→いた」だけになることなど）。最悪ケースは上限で打ち切り 35ms"
+    ],
+    "concerns": [
+      "実機での推論は未検証。特に (1) Flow の各 Message が差分かどうか (2) Gemma 4 の思考が channels['thought'] に入るか (3) 複数 AudioBytes を1メッセージに入れられるか (4) Think と画像の併用でのクラッシュ報告、の4点は実機で確認が必要",
+      "Capacitor のブリッジ注入は WebView の DOCUMENT_START_SCRIPT 対応が前提。非対応の古い WebView ではインライン注入になり、CSP（script-src 'self'）で起動できない",
+      "build-tools 36.0.0 は sdkmanager で入らず、Gradle が自動導入した 35.0.0 で動作している",
+      "署名鍵（.signing/hisoka-release.jks）を失うと、上書き更新ができなくなる",
+      "フォントは woff と woff2 の両方が同梱されており、APK が数 MB 大きい"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T13:50:00+09:00",
+    "files": [
+      "android/app/build.gradle（productFlavors: standard / bundled、noCompress litertlm、versionCode 2 / 1.1.0）",
+      "android/app/src/main/java/app/hisoka/offline/llm/ModelStore.kt（同梱アセットの検出と展開、コピー処理を install() に共通化）",
+      "android/app/src/main/java/app/hisoka/offline/llm/LlmPlugin.kt（extractBundledModel、直前ターンの添付保持、ATTACHMENT_EXPIRED コード）",
+      "vite.config.ts（woff2Only プラグイン）",
+      "src/lib/settings.ts（Persona と autoThinkBudget）",
+      "src/lib/persona/presets.ts（新規）",
+      "src/lib/chat/systemPrompt.ts（人格対応と personaKey）",
+      "src/lib/chat/thinkBudget.ts（新規）",
+      "src/lib/native/llm.ts・index.ts",
+      "src/features/chat/hooks/useChatSession.ts",
+      "src/features/settings/PersonaSection.tsx（新規）",
+      "src/features/settings/SettingsSheet.tsx",
+      "src/features/setup/ModelSetup.tsx",
+      "src/features/chat/components/EmptyState.tsx・MessageList.tsx",
+      "src/features/chat/ChatScreen.tsx",
+      "package.json（apk / apk:bundled）",
+      ".gitignore",
+      "README.md"
+    ],
+    "summary": "v1.1.0。モデル同梱版 APK（Hisoka-1.1.0-bundled.apk, 2.64GB）を追加し、軽量版（Hisoka-1.1.0.apk, 50.8MB）と同時に生成。アシスタントの名前・性格・思考パターンの設定、思考量の自動調整、添付込みの再生成、フォントの WOFF2 化を実装",
+    "purpose": "APK 1つで導入を完結させたいというユーザー要望と、前回報告で提案したプラスアルファ3点の実装、および人格のカスタマイズ要望に応えるため",
+    "impact": "両版とも同じ署名・同じ applicationId のため相互に上書き可能。同梱版は初回に「展開する」操作が必要で、端末の使用容量は約 5.1GB。人格を変更すると次の送信時にネイティブ側の会話を履歴から作り直す",
+    "decisions": [
+      "LiteRT-LM はファイルパスしか受け付けないため、アセットを直接 mmap する方式は不可能と判断し、初回展開方式を採用。2倍の容量を使うことを README と取り込み画面に明記",
+      "同梱モデルは noCompress で非圧縮格納し、展開を単純なストリームコピーにした",
+      "再生成のための添付保持は、暗号化ディスク保存ではなく「直前ターン分だけメモリに残す」方式にした。ディスクに一切書かないため、プライバシー面で優位。アプリ再起動後は本文と注記で代替する",
+      "思考量の自動調整は、添削の意図語（添削・校正・推敲など）または添付なしの40字以下のメッセージで上限を 512 に抑える。設定でオフにできる",
+      "人格はシステムプロンプトの「性格と話し方」「考え方」節に入れ、添削の出力形式は人格より優先と明記して差分カードが壊れないようにした",
+      "フォントは @fontsource の CSS から WOFF フォールバックを Vite プラグインで除去（dist 12MB→6.3MB）"
+    ],
+    "verification": [
+      "tsc（TypeScript 7.0.2）と vite build が通過",
+      "assembleStandardRelease / assembleBundledRelease が通過",
+      "同梱 APK 内のモデルが Stored（非圧縮）で、SHA-256 が Hugging Face の公開値 181938105e… と一致",
+      "両 APK の権限は RECORD_AUDIO と Android 自動付与の内部権限のみ。署名証明書は両版で同一。zipalign -c -p 4 通過",
+      "UI ハーネスで同梱版の取り込み画面、人格設定（入力・プリセット選択・保存内容）、名前入りの初期画面を確認"
+    ],
+    "concerns": [
+      "2.6GB の APK の実機インストールは未検証。端末のファイルアプリやインストーラによっては大容量 APK の扱いに失敗する可能性があり、その場合は adb install を使う",
+      "同梱版でも「モデルを削除」すると展開済みファイルが消えるだけで APK 内のモデルは残る。再展開で戻せる",
+      "前回からの実機未検証項目（ストリーミング差分の扱い、thought チャネル、複数 AudioBytes、Think と画像の併用）は引き続き未確認",
+      "同梱版のビルドには android/app/src/bundled/assets/models/ にモデルの配置が必要（Git 管理外）"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T14:35:00+09:00",
+    "files": [
+      "android/app/src/main/java/app/hisoka/offline/llm/LlmEngine.kt",
+      "src/lib/chat/systemPrompt.ts",
+      "src/lib/proofread/instruction.ts（新規）",
+      "src/lib/chat/thinkBudget.ts",
+      "src/features/chat/hooks/useChatSession.ts",
+      "src/features/settings/PersonaSection.tsx",
+      "src/features/settings/SettingsSheet.tsx",
+      "android/app/build.gradle",
+      "package.json",
+      "README.md"
+    ],
+    "summary": "v1.1.1。実機で「Google AI Edge Gallery の同じモデルより回答が低レベルで、日本語文中にタイ文字のような異物が混ざる」との報告を受け、サンプリング設定とシステムプロンプトを修正",
+    "purpose": "Gallery と同じモデル・同じ条件で、同等の回答品質を出すため",
+    "impact": "会話の初期化時に SamplerConfig(topK=64, topP=0.95, temperature=1.0) を明示。システムプロンプトは名前・日付・ユーザー設定の人格だけに縮小し、添削の出力形式は添削を依頼した発言にだけ付加する",
+    "decisions": [
+      "鑑別: (1) samplerConfig 省略時の LiteRT-LM 既定値は engine_settings.cc で TOP_P(p=0.95, temperature=1.0)・top-k 制限なしと確認。262k 語彙の裾から異物トークンを引く症状と一致（本命） (2) 長い日本語システムプロンプトを 2B モデルが過剰に守り、「はるはる」に自己紹介で返すなど会話が崩れた（次点） (3) Gallery は CPU、Hisoka は GPU の数値差（証拠なし・低）",
+      "Gallery の model_allowlist の Gemma-4-E2B-it 既定値（topK 64 / topP 0.95 / temperature 1.0、システムプロンプトなし）に合わせた",
+      "添削フォーマットの常設指示をやめ、PROOFREAD_INTENT に一致する発言にだけ ［出力形式］ を付ける方式に変更。UI と履歴にはユーザーの原文のみを残す"
+    ],
+    "verification": [
+      "tsc と vite build が通過",
+      "軽量版・同梱版の両方の assembleRelease が通過。権限と署名証明書が前版と同一であることを aapt2 / apksigner で確認"
+    ],
+    "concerns": [
+      "実機での品質改善は未確認。ユーザーに Gallery と同じ質問での比較を依頼する",
+      "改善が不十分な場合は、設定で CPU に切り替えて GPU の数値精度の影響を切り分ける"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T14:45:00+09:00",
+    "files": [
+      "src/components/ui/Sheet/index.tsx",
+      "src/lib/back/backStack.ts（新規）",
+      "src/components/ui/ConfirmDialog/index.tsx",
+      "src/features/chat/components/MetaRow.tsx",
+      "src/App.tsx",
+      "package.json（@capacitor/app 8.1.2 追加、1.1.2）",
+      "android/app/src/main/java/app/hisoka/offline/vault/ConversationVault.kt",
+      "android/app/build.gradle（versionCode 4）",
+      "README.md"
+    ],
+    "summary": "v1.1.2。実機で「履歴シートが閉じない」との報告を受け、シートの下スワイプでの閉じる操作と Android の戻る操作への対応を追加。履歴一覧の復号失敗を空表示で隠さず、エラーとして表示するよう変更",
+    "purpose": "スマホで当然期待される閉じ方（スワイプ・戻る）が未実装だったため",
+    "impact": "戻る操作は最前面のレイヤー（確認ダイアログ→シート→メニュー）から順に閉じ、何も開いていなければアプリを最小化する。@capacitor/app のマニフェストは空で、権限は増えていないことを aapt2 で確認",
+    "decisions": [
+      "タッチ操作を再現するハーネスで鑑別し、外側タップとハンドルのタップは動作、下スワイプと戻る操作が未実装であることを確認してから修正した",
+      "LazyMotion(domAnimation) には drag がないため、掴み領域の pointer イベントと useMotionValue で手動実装。開閉アニメーション（外側）とドラッグ追従（内側）を別要素に分けて干渉を避けた",
+      "ドラッグ後のハンドルの click は無視し、少し引いて離した場合は閉じずにバネで戻す"
+    ],
+    "verification": [
+      "tsc / vite build / 両版の assembleRelease が通過",
+      "ハーネスでタッチ操作を再現し、外側タップ・ハンドルのタップ・下スワイプ・戻る操作で閉じること、何も開いていない時の戻る操作で最小化されること、短いドラッグでは閉じないことを確認"
+    ],
+    "concerns": [
+      "履歴が空だった件の原因は未特定。アンインストールしてから再インストールした場合はデータが消えるため、まずユーザーに経緯を確認する。復号失敗が原因なら、v1.1.2 ではエラーとして表示される",
+      "実機でのスワイプの手触りは未確認"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T15:00:00+09:00",
+    "files": [
+      "src/lib/chat/systemPrompt.ts",
+      "src/features/chat/hooks/useChatSession.ts",
+      "android/app/src/main/java/app/hisoka/offline/llm/LlmEngine.kt",
+      "src/features/chat/components/Markdown.tsx",
+      "package.json（remark-cjk-friendly 2.3.3 追加、1.1.3）",
+      "android/app/build.gradle（versionCode 5）",
+      "src/features/settings/SettingsSheet.tsx"
+    ],
+    "summary": "v1.1.3。実機（CPU 実行）でも「外国人のような不自然な日本語」「唐突に日付の話をする」「**が太字にならない」との報告を受け、Google AI Edge Gallery の呼び出し方に完全にそろえた",
+    "purpose": "Gallery と同じモデルで同等の自然な日本語を出すため",
+    "impact": "人格が既定のままならシステムプロンプトを送らない（Gallery の AI Chat の既定 defaultSystemPrompt = \"\" と同じ）。カスタマイズ時も名前と人格だけを送り、日付は送らない。思考は extraContext の enable_thinking で切り替え、ThinkingConfig は Think オン時の上限指定にだけ使う。停止・エラー後の次の送信では、ネイティブ側の会話を履歴から作り直す",
+    "decisions": [
+      "Gallery の LlmChatModelHelper.kt を読み、思考の切り替えが ThinkingConfig ではなく extraContext[\"enable_thinking\"] であること、SystemPromptHelper の既定値が空文字であることを確認",
+      "CPU に切り替えても症状が残ったため、GPU の数値精度は主因ではないと判断",
+      "日付をシステムプロンプトに入れると 2B モデルが話題にしてしまう（実機で「この2026年10月28日は実に興味深い日だ」）ため削除",
+      "Conversation.kt の「キャンセル後に内部状態を巻き戻せない（b/450903294）」という注記にもとづき、停止・エラー後は synced を破棄して次回送信時に resetConversation する",
+      "CommonMark は「）」直後の ** に日本語が続くと閉じ記号と見なさないため、remark-cjk-friendly で補正。同じ文で strong ノードが 1→2 になることを確認"
+    ],
+    "verification": [
+      "tsc と vite build が通過",
+      "UI ハーネスで「この**2026年10月28日（水）**は」が太字で表示され、操作フロー全体でエラーがないことを確認"
+    ],
+    "concerns": [
+      "実機での日本語の自然さは未確認。Gemma 4 E2B は実効 2B のため、Gallery と同条件にしても日本語の表現力には上限がある"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T15:15:00+09:00",
+    "files": [
+      "src/lib/markdown/cjkEmphasis.ts（新規）",
+      "src/features/chat/components/Markdown.tsx",
+      "src/features/settings/SettingsSheet.tsx",
+      "android/app/build.gradle（versionCode 6）",
+      "package.json（1.1.4）",
+      "README.md"
+    ],
+    "summary": "v1.1.4。Gallery との比較スクリーンショットで回答品質が同等になったことを確認。残っていた「** 「…」**」形式の太字崩れを修正",
+    "purpose": "モデルが開き ** の直後に空白を入れると、CommonMark の仕様で強調として扱われないため",
+    "impact": "日本語に挟まれた ** 前後の空白だけを表示前に詰める。** が行内で対になっている行に限定し、コードブロックとインラインコードは変更しない",
+    "verification": [
+      "9件のケース（報告文・閉じ側の空白・英語の太字・べき乗の 2 ** 3・記号に言及する文・Python のコードブロック・インラインコード）で期待どおりの結果になることを確認",
+      "tsc 通過"
+    ],
+    "concerns": [
+      "数式（$mathbb{Z}$ など）は Gallery と同様に記号のまま表示される。KaTeX を同梱すれば描画できる"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T15:20:00+09:00",
+    "files": [
+      "src/lib/chat/systemPrompt.ts",
+      "src/features/settings/PersonaSection.tsx"
+    ],
+    "summary": "v1.1.4 に追加。既定の名前「Hisoka」をシステムプロンプトに入れないよう変更し、名前欄に有名キャラクター名の注意書きを追加",
+    "purpose": "実機で「ふふ」「興味深い、つまらない」「曖昧な質問は面白くない」と、HUNTER×HUNTER のヒソカを演じるような回答が続いたため。人格を1項目でも設定すると「あなたの名前は「Hisoka」です」が送られ、2B モデルが有名キャラクターとして振る舞っていた",
+    "impact": "名前を既定のままにしている限り、名前はモデルに伝わらない。人格（性格・思考パターン）だけを設定した場合は、その2項目だけを送る",
+    "concerns": [
+      "ユーザーの人格設定の内容は未確認。原因の切り分けのため、設定画面の「既定に戻す」での比較を依頼する"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T15:55:00+09:00",
+    "files": [
+      "src/features/chat/components/Markdown.tsx",
+      "src/lib/markdown/（index.ts・prose.ts・cjkEmphasis.ts・mathDelimiters.ts）",
+      "src/main.tsx",
+      "src/styles/globals.css",
+      "vite.config.ts",
+      "package.json（remark-math 6 / rehype-katex 7 / katex 0.16.47、1.2.0）",
+      "android/app/src/main/res/drawable/ic_launcher_{background,foreground,monochrome}_hisoka.xml",
+      "android/app/src/main/res/mipmap-anydpi-v26/*",
+      "android/app/build.gradle（versionCode 7）",
+      "project_style.json（typography.math・texture.app_icon）",
+      "README.md"
+    ],
+    "summary": "v1.2.0。KaTeX による数式表示を同梱し、アプリアイコンを「鍵穴の向こうに灯るランプ」へ刷新",
+    "purpose": "ユーザー承認（「同梱をしてほしい」）による数式表示の追加と、「アイコンがダサい」という指摘への対応",
+    "impact": "回答中の $…$・$$…$$・(…)・[…] を描画。1行の $$…$$ と […] はブロック数式に正規化。Markdown 前処理はコード部分を除外する mapProse に共通化。Capacitor 既定のアイコン PNG・スプラッシュ画像・未使用のベクターを削除",
+    "decisions": [
+      "rehype-katex が依存する KaTeX は 0.16.47 で、0.19 の CSS を読み込むと \neq などの重ね描き（.rlap > .inner）が崩れた。トップレベルの katex を 0.16.47 に揃えて解消",
+      "KaTeX フォントは woff2Only プラグインで WOFF/TTF を除外し、WOFF2 の20ファイル（296KB）のみ同梱",
+      "アイコンは3案（鍵穴に灯り・錠前の輪付き・吹き出し×鍵穴）を実寸とホーム画面で比較し、小サイズでの視認性を上げた鍵穴に、床へこぼれる光を加えた案を採用。色はすべて project_style.json のパレットから取った"
+    ],
+    "verification": [
+      "tsc / vite build / 両版の assembleRelease が通過",
+      "UI ハーネスで数式5件の描画（ブロック2件）、≠ の正しい重ね描き、太字補正、コードブロック不変を確認",
+      "aapt2 でランチャーアイコンが新しい adaptive-icon（背景・前景・単色）を参照していること、権限と署名が前版と同一であることを確認"
+    ],
+    "concerns": [
+      "実機でのアイコンの見え方（ランチャーのマスク形状）とスプラッシュの見え方は未確認",
+      "remark-math は $5 と $10 のような文中のドル記号を数式と誤認する可能性がある"
+    ]
+  },
+  {
+    "datetime": "2026-10-28T18:25:00+09:00",
+    "files": [
+      "android/variables.gradle（minSdk 28→30）",
+      "android/app/build.gradle（androidx.biometric 1.1.0、versionCode 8 / 1.3.0）",
+      "android/app/src/main/AndroidManifest.xml（HIDE_OVERLAY_WINDOWS 追加、USE_FINGERPRINT 除去）",
+      "android/app/src/main/java/app/hisoka/offline/security/（Authenticator.kt・AccessibilityAudit.kt 新規）",
+      "android/app/src/main/java/app/hisoka/offline/vault/（HistoryKeys.kt 新規、ConversationVault.kt・VaultPlugin.kt 書き直し、VaultCipher.kt→LegacyCipher.kt）",
+      "android/app/src/main/java/app/hisoka/offline/（MainActivity.kt・SecureWebView.kt・media/AttachmentStore.kt・media/AudioRecorder.kt）",
+      "src/lib/native/vault.ts・index.ts",
+      "src/features/history/HistorySheet.tsx",
+      "src/features/settings/（SecuritySection.tsx・parts.tsx 新規、SettingsSheet.tsx）",
+      "src/features/security/useAccessibilityWarning.ts（新規）",
+      "src/features/chat/（ChatScreen.tsx・hooks/useChatSession.ts・components/EmptyState.tsx）",
+      "src/features/setup/ModelSetup.tsx",
+      "README.md"
+    ],
+    "summary": "v1.3.0。外部から提案されたセキュリティ強化案を評価し、採用分を実装。履歴を開くとき（と全削除のとき）だけ生体認証または画面ロック解除を求める方式に変更。あわせて初期画面の説明文の改行を読点区切りに固定",
+    "purpose": "ロック解除されたスマホを他人が手にした場合や、画面を覗く・読み取る他アプリから履歴を守るため。ユーザー指定で、認証は履歴を開くときだけにした",
+    "impact": "保存は認証なしのまま（公開鍵で包んだセッション鍵で暗号化）。読み出しは Keystore の RSA 秘密鍵が必要で、ロック有効時は認証後30秒だけ使える。旧形式の履歴は起動時に自動移行。対応 OS は Android 11 以上に変更。権限は HIDE_OVERLAY_WINDOWS と USE_BIOMETRIC が追加（どちらもインストール時に自動許可される通常権限）",
+    "decisions": [
+      "提案のうち、root・改ざん検知での自動消去は「誤検知で持ち主のデータを壊す」「Magisk で容易に回避される」ため不採用。会話ごとの鍵破棄は履歴機能と矛盾するため不採用",
+      "書き込みは認証不要・読み出しは認証必須という要件のため、対称鍵1本ではなく、セッションごとの AES 鍵を RSA-OAEP（MGF1 は全 API で使える SHA-1 に固定）で包む方式にした。保存時に一覧を読み戻さないよう、要約も会話ごとのファイルに分けた",
+      "履歴を開いたときに古いセッション鍵の会話を現在の鍵で再暗号化し、参照されなくなった鍵ファイルを削除する（鍵の数が増え続けない）",
+      "setInvalidatedByBiometricEnrollment(false) で、指紋の追加・削除では鍵が無効にならないようにした。画面ロックを外した場合の無効化は OS 仕様で防げないため、設定画面に明記し、復号できない場合の初期化導線を用意",
+      "時間制限付きの鍵に BIOMETRIC_STRONG と DEVICE_CREDENTIAL を両方許可する API が Android 11 からのため、minSdk を 30 に上げた",
+      "全削除は破壊的操作のため、ロック有効時は認証を要求。画面ロック自体がない場合は認証できないため、認証なしで初期化できる",
+      "アクセシビリティは遮断せず警告のみ（正当な読み上げ利用者を締め出さないため）。プリインストールのサービスは警告対象から外す",
+      "初期画面の説明文は auto-phrase と text-wrap: balance を試したが、320px 幅で「この／端末」と折れたため、読点の後だけで折り返す inline-block の固定区切りにした"
+    ],
+    "verification": [
+      "Kotlin・tsc・vite build・両版の assembleRelease が通過",
+      "aapt2 で minSdk 30、権限が RECORD_AUDIO・HIDE_OVERLAY_WINDOWS・USE_BIOMETRIC と内部権限のみ（INTERNET なし、USE_FINGERPRINT 除去済み）、署名証明書が前版と同一であることを確認",
+      "ハーネスで、アクセシビリティ警告の表示、認証後の履歴表示、会話を開いた後に履歴の鍵が閉じられる順序（auth→open→close）、認証キャンセル時の画面と再認証、設定のセキュリティ欄を確認",
+      "初期画面の説明文が 320px では読点の後で4行、360px と 412px では2行で収まることを確認"
+    ],
+    "concerns": [
+      "生体認証・Keystore・StrongBox・旧形式からの移行は実機でしか確認できず、未検証",
+      "StrongBox の RSA 復号は端末によって遅く、セッション鍵が多い状態で初めて履歴を開くと時間がかかる可能性がある（開くたびに再暗号化で鍵は減る）",
+      "端末の画面ロックをなしにすると、保存済みの会話は復号できなくなる"
+    ]
+  },
+  {
+    "timestamp": "2026-11-05T16:47:00+09:00",
+    "version": "1.3.0",
+    "scope": "プロジェクト全体 / リポジトリ公開",
+    "summary": "GitHub（KisaragiIchigo/AndroidLLM）への公開準備、防御的 .gitignore 強化、初期リポジトリ構築",
+    "purpose": "オープンソースとして安全に公開するため、署名鍵・認証設定・モデル大容量バイナリを徹底除外したリポジトリを整備し、初期コミットを作成・公開する",
+    "files": [
+      ".gitignore",
+      "changelogs.json"
+    ],
+    "decisions": [
+      "キーストア（.signing/, keystore.properties, *.jks）、ローカルSDK設定（local.properties）、2.6GBモデル（*.litertlm）をワイルドカードも含めて二重で防御的除外",
+      "変更履歴の透明性と将来のAI/共同開発のため、changelogs.json の除外を解除して Git バージョン管理に含める方針を採用",
+      "誤作成された 0 バイトファイル（3）を削除",
+      "Windows環境の Git 2.56（ucrt64）における Winsock 10013（WSAEACCES）バグを回避するため、ローカルプロキシトンネル経由でプッシュを実施"
+    ],
+    "verification": [
+      "git status -u でシークレット、バイナリ、一時ファイルが一切追跡対象に含まれていないことを確認",
+      "ローカルプロキシトンネル経由での GitHub 通信（git ls-remote）導通を確認"
+    ],
+    "concerns": [
+      "初回公開後のリポジトリへの直接プッシュ時は、Windows環境特有のWinsockバグによりプロキシトンネルが必要になる場合がある"
+    ]
+  }
+]

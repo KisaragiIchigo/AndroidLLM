@@ -1,0 +1,103 @@
+{
+  "_readme": "プロジェクトスタイルマニフェスト。エージェントはUIに触れるすべてのタスクの冒頭でこれを読み、ここに無い色・フォント・質感を勝手に導入してはならない。変更はユーザー合意の上でこのファイルを更新し、changelogs.json に記録する。",
+  "meta": {
+    "project": "Hisoka（ひそか）",
+    "concept": "機密文書の添削とプライベートな雑談を、ネットワーク権限を持たない Android 端末内だけで完結させる、自分専用のオフラインチャットAI。画面はチャットのみで、画像・音声・動画・ファイルを添付できる。",
+    "mood_keywords": [
+      "密室の書斎",
+      "夜の卓上ランプ",
+      "静謐",
+      "信頼できる道具感",
+      "手元で閉じる安心"
+    ],
+    "created": "2026-10-28",
+    "updated": "2026-10-28"
+  },
+  "stack": {
+    "framework": "Vite + React + TypeScript",
+    "styling": "Tailwind CSS v3",
+    "ui_primitives": "Radix UI",
+    "motion": "Framer Motion（LazyMotion + m モジュール）",
+    "native_shell": "Capacitor（Android）。INTERNET 権限は merged manifest から除去する",
+    "inference": "Kotlin + LiteRT-LM（com.google.ai.edge.litertlm:litertlm-android）+ Gemma 4 E2B（.litertlm）",
+    "fonts_delivery": "@fontsource のローカル同梱のみ。外部CDN・Google Fonts への実行時アクセスは禁止",
+    "_rule": "スタック変更はユーザーの明示指定のみ"
+  },
+  "palette": {
+    "base_bg": "#0e0f11",
+    "base_bg_alt": "#09090b",
+    "surface": "bg-[#16181b]",
+    "surface_raised": "bg-[#1c1f23]",
+    "surface_deep": "bg-black/40",
+    "border": "border-[#e8e2d6]/[0.07]",
+    "border_subtle": "border-[#e8e2d6]/[0.04]",
+    "accent": "#e2b25c（ランプ・アンバー）",
+    "accent_gradient": "from-[#e9be6c] via-[#e2b25c] to-[#c9933f]",
+    "accent_glow": "shadow-[0_0_18px_rgba(226,178,92,0.16)]",
+    "accent_badge": "bg-[#e2b25c]/10 text-[#f0cd8a]",
+    "focus_ring": "focus:border-[#e2b25c]/50",
+    "think": "#7fa8a1（緑青。Think モードの思考ブロック専用）",
+    "think_surface": "bg-[#7fa8a1]/[0.06] border-[#7fa8a1]/20 text-[#b6d2cc]",
+    "diff_insert": "bg-[#8fbf8a]/15 text-[#c4e2bf]",
+    "diff_delete": "bg-[#e07a6b]/12 text-[#e9a79c] line-through",
+    "sealed": "#8fbf8a（オフライン封印インジケータ）",
+    "danger": "bg-[#e07a6b]/10 border-[#e07a6b]/25 text-[#efb0a6]",
+    "warning": "bg-[#e2b25c]/10 border-[#e2b25c]/25 text-[#f0cd8a]",
+    "text_primary": "text-[#e8e2d6]（紙のような暖色白）",
+    "text_secondary": "text-[#a8a196]",
+    "text_description_min": "text-sm 以上・透過なしの text-[#e8e2d6] / text-[#a8a196]",
+    "_rule": "新しい色はまずここに追記してから使う。UIファイルへの直書きで色を増やさない。Tailwind の theme.extend.colors へ同名トークンで登録して参照する"
+  },
+  "typography": {
+    "display": "Bricolage Grotesque（アプリ名・欧文見出し・数値の大表示）",
+    "body": "IBM Plex Sans JP（本文・UI 全般）",
+    "mono": "IBM Plex Mono（トークン数・tok/s・モデル情報）",
+    "jp": "IBM Plex Sans JP。本文 400 / ラベル 500 / 見出し 600 の3ウェイト。本文は tracking-[0.01em]、行間 1.75 で長文添削の可読性を優先",
+    "label_style": "text-xs + UPPERCASE（欧文ラベルのみ）+ tracking-widest。和文ラベルは大文字化せず weight 500 + tracking-wider",
+    "fluid": "clamp() で端末幅 360〜480px に滑らかに追従（本文 clamp(15px, 3.9vw, 17px)）",
+    "math": "KaTeX 同梱フォント（数式表示専用。本文・UI には使わない。WOFF2 のみ同梱）"
+  },
+  "texture": {
+    "acrylic": true,
+    "backdrop_blur": "backdrop-blur-md（ヘッダーとコンポーザーのみ。スクロール領域には使わない）",
+    "inset_shadow": "shadow-[inset_0_1px_2px_rgba(0,0,0,0.55)]",
+    "grain": "ベース背景に極薄のノイズ（opacity 0.025、ローカル SVG）で紙の手触りを出す",
+    "app_icon": "鍵穴の向こうに灯るランプ。背景はグラファイト（#1c1f23→#0e0f11→#09090b の放射グラデ）、鍵穴はアンバー（#f0cd8a→#e9be6c→#c9933f）、周囲にアンバーの淡いグロー、鍵穴の下へ光がこぼれる。テーマアイコンは鍵穴の単色シルエット"
+  },
+  "density": {
+    "level": "medium（スマホのタッチ操作前提）",
+    "reference": "iA Writer の静けさ + Things のタッチ精度",
+    "layout": "ヘッダー・タイトル・モード切替なし。画面はスレッドとコンポーザーのみ。封印状態・バックエンド・tok/s はコンポーザー上の1行メタ行に置き、新規会話・履歴・設定はメタ行右端の … メニューから開く。添付は + ボタンのボトムシート",
+    "touch_target_min": "44px",
+    "icon_size": "w-4 h-4 〜 w-5 h-5",
+    "icon_color": "text-[#a8a196]",
+    "slider": "極細トラック + アンバー発光の数値バッジ"
+  },
+  "motion": {
+    "hover": "使わない（タッチ端末）",
+    "active": "active:scale-[0.97]",
+    "tab_switch": "Magic Motion（layoutId による添削／雑談モード切替）",
+    "streaming": "トークンはアニメーションさせず即時追記。末尾にアンバーのキャレットが呼吸する（1.6s ease-in-out）",
+    "think_expand": "思考ブロックの開閉は height spring（stiffness 380 / damping 34）",
+    "disabled": "グレーアウトせず opacity-40",
+    "reduced_motion": "prefers-reduced-motion で全トランジションを無効化"
+  },
+  "zindex": {
+    "base": 0,
+    "floating": 40,
+    "modal": 50,
+    "tooltip": 60
+  },
+  "forbidden": [
+    "紫グラデーション on 白背景",
+    "Inter / Roboto / Arial / Outfit / システムフォント頼みのタイポグラフィ",
+    "和文UIへの明朝系フォント（Shippori Mincho 等）",
+    "text-[10px] / text-[11px] や薄すぎるカラーの説明文",
+    "太いグレー枠・デフォルト影・原色ベタ塗り",
+    "ティール／ネオン系のサイバー配色（このアプリの静けさと矛盾するため）",
+    "アプリバー・タイトル表示・添削／雑談などのモード切替タブ（チャットへの集中を妨げるため。ユーザー却下済み）",
+    "外部CDN・リモートフォント・リモート画像の参照",
+    "このファイルに無い色やフォントの直書き導入"
+  ],
+  "app_text_tone": "アプリ内のヘルプ・設定補足・マニュアル類は「です・ます調（セミフォーマル）」で統一"
+}

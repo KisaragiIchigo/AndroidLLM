@@ -1,0 +1,25 @@
+node_modules/
+dist/
+release/
+*.apk
+
+# ローカル専用のツールチェーンと署名鍵
+.toolchain/
+.signing/
+**/*.jks
+**/*.keystore
+**/keystore.properties
+**/local.properties
+
+# ビルド・IDE・OS一時ファイル
+android/.kotlin/
+.idea/
+*.iml
+.vscode/
+*.log
+.DS_Store
+Thumbs.db
+
+# 同梱版ビルド用のモデル（2.6GB）
+android/app/src/bundled/assets/models/
+*.litertlm

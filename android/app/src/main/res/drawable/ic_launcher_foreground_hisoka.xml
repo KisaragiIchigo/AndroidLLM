@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lamplight seen through a keyhole: the secret room is lit, and a little of it spills onto the floor. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M18,49 A36,36 0 1,0 90,49 A36,36 0 1,0 18,49 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="49"
+                android:gradientRadius="36">
+                <item android:offset="0" android:color="#73E2B25C" />
+                <item android:offset="0.5" android:color="#21E2B25C" />
+                <item android:offset="1" android:color="#00E2B25C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M46,74 H62 L80,108 H28 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="74"
+                android:endX="54"
+                android:endY="100">
+                <item android:offset="0" android:color="#38E2B25C" />
+                <item android:offset="1" android:color="#00E2B25C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M40.5,43 A13.5,13.5 0 1,0 67.5,43 A13.5,13.5 0 1,0 40.5,43 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="30"
+                android:endX="54"
+                android:endY="75">
+                <item android:offset="0" android:color="#FFF0CD8A" />
+                <item android:offset="0.45" android:color="#FFE9BE6C" />
+                <item android:offset="1" android:color="#FFC9933F" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M49.4,50 H58.6 L62.6,70.6 Q63.1,74 59.7,74 H48.3 Q44.9,74 45.4,70.6 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="30"
+                android:endX="54"
+                android:endY="75">
+                <item android:offset="0" android:color="#FFF0CD8A" />
+                <item android:offset="0.45" android:color="#FFE9BE6C" />
+                <item android:offset="1" android:color="#FFC9933F" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
