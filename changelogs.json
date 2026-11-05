@@ -373,5 +373,29 @@
     "concerns": [
       "なし"
     ]
+  },
+  {
+    "timestamp": "2026-11-05T17:00:00+09:00",
+    "version": "1.3.0",
+    "scope": "リリース / 配布 / ドキュメント",
+    "summary": "モデル同梱版 APK（Hisoka-1.3.0-bundled.apk）の 2 分割配布および結合ドキュメント追加",
+    "purpose": "GitHub Releases の単一ファイル 2GB 上限をクリアし、モデルダウンロードなしで即使える同梱版 APK を誰でもダウンロードできるようにする",
+    "files": [
+      "README.md",
+      "changelogs.json"
+    ],
+    "decisions": [
+      "2,639,362,198 バイトの同梱版 APK を各 1,319,681,099 バイト（約 1.23GB）の 2 ファイル（.part1 / .part2）にバイナリ分割して GitHub Releases に追加アップロード",
+      "解凍ソフトを不要にするため raw binary split を採用し、OS 標準コマンド（Windows: copy /b、Mac/Linux/Android: cat）でワンライナー結合できるようにした",
+      "結合前後の SHA-256 チェックサムが完全一致することをローカル結合テストで事前検証済み",
+      "README.md および GitHub Releases リリースノートに結合手順と SHA-256 ハッシュを追記"
+    ],
+    "verification": [
+      "ローカルでの copy /b 結合テストで元ファイルと SHA-256（027B0F820EE69DCE2E00326BFC026778BE266016F6786A5E3D216AB2C62B3A50）が完全一致",
+      "gh release view v1.3.0 で Hisoka-1.3.0-bundled.apk.part1 と part2 のアセット存在を確認"
+    ],
+    "concerns": [
+      "なし"
+    ]
   }
 ]

@@ -24,13 +24,25 @@ Gemma 4 E2B を端末内で動かし、機密文書の添削や私的な雑談�
 | APK | サイズ | 端末の使用容量 | 向いている場合 | 入手方法 |
 | --- | --- | --- | --- | --- |
 | `Hisoka-1.3.0.apk` | 約 50MB | 約 2.6GB | 端末の容量を節約したい場合 | [Releases](https://github.com/KisaragiIchigo/AndroidLLM/releases) からダウンロード、またはローカルビルド |
-| `Hisoka-1.3.0-bundled.apk` | 約 2.5GB | 約 5.1GB（APK と展開後のモデル） | 1ファイルで手軽に導入したい場合 | ローカルビルド（`npm run apk:bundled`） |
+| `Hisoka-1.3.0-bundled.apk` | 約 2.5GB | 約 5.1GB（APK と展開後のモデル） | 1ファイルで手軽に導入したい場合 | [Releases](https://github.com/KisaragiIchigo/AndroidLLM/releases) から分割版をダウンロードして結合、またはローカルビルド |
 
 推論エンジンはモデルをファイルとして読み込むため、同梱版では初回起動時に APK からモデルを展開します。APK 自体は削除できないため、同梱版は容量を約2倍使います。
 
 ### 同梱版
 
-1. APK を端末に転送し、ファイルアプリから開いてインストールします。提供元不明のアプリのインストール許可を求められた場合は、許可してください。
+Releases から導入する場合は、GitHub のファイルサイズ上限（2GB）により 2 つに分割（`.part1`, `.part2`）されています。ダウンロード後に以下のコマンドで結合してください。
+
+```cmd
+:: Windows (コマンドプロンプトまたは PowerShell)
+copy /b Hisoka-1.3.0-bundled.apk.part1 + Hisoka-1.3.0-bundled.apk.part2 Hisoka-1.3.0-bundled.apk
+```
+
+```bash
+# Mac / Linux / Android (Termux)
+cat Hisoka-1.3.0-bundled.apk.part1 Hisoka-1.3.0-bundled.apk.part2 > Hisoka-1.3.0-bundled.apk
+```
+
+1. 生成された `Hisoka-1.3.0-bundled.apk` を端末に転送し、ファイルアプリから開いてインストールします。提供元不明のアプリのインストール許可を求められた場合は、許可してください。
 2. アプリを起動し、「展開する」を押します（1分ほどかかる場合があります）。
 
 ### 軽量版
