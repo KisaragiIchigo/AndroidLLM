@@ -19,12 +19,12 @@ Gemma 4 E2B を端末内で動かし、機密文書の添削や私的な雑談�
 
 ## 導入（APK の直接インストール）
 
-`release/` に2種類の APK があります。署名とアプリ ID は共通のため、どちらからどちらへも上書きインストールで切り替えられます。
+軽量版 APK は [GitHub Releases](https://github.com/KisaragiIchigo/AndroidLLM/releases) から直接ダウンロードできます。また、手元でビルドした場合は `release/` に出力されます。署名とアプリ ID は共通のため、どちらからどちらへも上書きインストールで切り替えられます。
 
-| APK | サイズ | 端末の使用容量 | 向いている場合 |
-| --- | --- | --- | --- |
-| `Hisoka-1.3.0-bundled.apk` | 約 2.5GB | 約 5.1GB（APK と展開後のモデル） | 1ファイルで手軽に導入したい場合 |
-| `Hisoka-1.3.0.apk` | 約 50MB | 約 2.6GB | 端末の容量を節約したい場合 |
+| APK | サイズ | 端末の使用容量 | 向いている場合 | 入手方法 |
+| --- | --- | --- | --- | --- |
+| `Hisoka-1.3.0.apk` | 約 50MB | 約 2.6GB | 端末の容量を節約したい場合 | [Releases](https://github.com/KisaragiIchigo/AndroidLLM/releases) からダウンロード、またはローカルビルド |
+| `Hisoka-1.3.0-bundled.apk` | 約 2.5GB | 約 5.1GB（APK と展開後のモデル） | 1ファイルで手軽に導入したい場合 | ローカルビルド（`npm run apk:bundled`） |
 
 推論エンジンはモデルをファイルとして読み込むため、同梱版では初回起動時に APK からモデルを展開します。APK 自体は削除できないため、同梱版は容量を約2倍使います。
 
@@ -35,7 +35,7 @@ Gemma 4 E2B を端末内で動かし、機密文書の添削や私的な雑談�
 
 ### 軽量版
 
-1. 同梱版と同じ手順で APK をインストールします。
+1. [Releases](https://github.com/KisaragiIchigo/AndroidLLM/releases) から `Hisoka-1.3.0.apk` をダウンロード（またはビルド）してインストールします。
 2. モデルファイル `gemma-4-E2B-it.litertlm`（約 2.6GB）を PC などで入手します。入手先は Hugging Face の `litert-community/gemma-4-E2B-it-litert-lm` です。
 3. アプリを起動し、次のどちらかの方法でモデルを準備します。
    - **ファイルから取り込む**: 端末に置いた .litertlm ファイルを選ぶと、アプリ内にコピーします。
